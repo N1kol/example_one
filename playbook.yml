@@ -1,0 +1,55 @@
+---
+- hosts: boy
+  name: Install Docker on Ubuntu
+  become: true
+  tasks:
+    - name: Update apt-cache
+      apt:
+        update_cache: true
+
+    - name: Install python3-pip
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install docker package
+      pip:
+        name: docker
+        executable: pip3
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker.io
+        state: latest
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pull Postgres image
+      docker_image:
+        name: postgres
+        tag: latest
+        pull: true
+
+    - name: Run PostgreSQL container
+      docker_container:
+        name: postgres
+        image: postgres:latest
+        state: started
+        restart_policy: always
+        published_ports:
+          - "5432:5432"
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: superpass
+          POSTGRES_DB: maindb
+        volumes:
+          - postgres_data:/var/lib/postgresql/data
+
+    - name: Create volume for PostgreSQL data
+      docker_volume:
+        name: postgres_data
